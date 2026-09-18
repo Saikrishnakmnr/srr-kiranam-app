@@ -205,3 +205,5 @@ def footer(settings):
         """,
         unsafe_allow_html=True,
     )
+def inject_css():
+    inject_neon_css()
