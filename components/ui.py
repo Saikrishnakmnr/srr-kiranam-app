@@ -205,5 +205,34 @@ def footer(settings):
         """,
         unsafe_allow_html=True,
     )
+ def product_card(product):
+    name = product.get("name", "Product")
+    price = product.get("selling_price", product.get("price", 0))
+    mrp = product.get("mrp")
+    image = product.get("image_url") or product.get("image")
+
+    if image:
+        st.image(image, use_container_width=True)
+
+    st.markdown(
+        f"""
+        <div class="product-card">
+            <div class="product-name">{name}</div>
+            <div>
+                <span class="product-price">₹{price}</span>
+                {"<span class='product-mrp'>₹" + str(mrp) + "</span>" if mrp and float(mrp) > float(price) else ""}
+            </div>
+        </div>
+        """,
+        unsafe_allow_html=True,
+    )
+
+    return st.button(
+        "🛒 Add to Cart",
+        key=f"add_{product.get('id', name)}",
+        use_container_width=True,
+    )
+
+
 def inject_css():
-    inject_neon_css()
+    inject_neon_css()    
