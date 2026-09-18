@@ -1,30 +1,121 @@
 import streamlit as st
-from config.settings import load_settings
-from components.ui import header, footer, product_card
-from components.cart import init_cart, add, count
+
+from components.ui import inject_css, header, footer
 from services.catalog import get_categories, get_products
+from services.settings import load_settings
+from components.cart import add_to_cart, init_cart
 
-settings=load_settings(); init_cart(); header(settings)
-st.markdown('<div class="section-head"><div><h2>🛍️ Shop</h2><p>Search the catalog and add products to your cart.</p></div></div>', unsafe_allow_html=True)
 
-cats = get_categories(); products = get_products()
-search_col, cat_col = st.columns([2,1])
-with search_col: query = st.text_input("Search", placeholder="Try rice, milk, soap...", label_visibility="collapsed")
-with cat_col: selected = st.selectbox("Category", ["All"] + [c.get("name", "Category") for c in cats], label_visibility="collapsed")
+st.set_page_config(
+    page_title="Shop",
+    page_icon="🛍️",
+    layout="wide",
+)
 
-filtered = products
-if selected != "All": filtered = [p for p in filtered if str(p.get("category_name", "")).lower() == str(selected).lower()]
-if query: filtered = [p for p in filtered if query.lower() in str(p.get("name", "")).lower() or query.lower() in str(p.get("description", "")).lower()]
+inject_css()
+init_cart()
 
-st.caption(f"{len(filtered)} product(s)")
-if not filtered: st.info("No products match your search.")
+settings = load_settings()
+header(settings)
+
+st.markdown(
+    """
+    <h1 style="margin-top:25px;">🛍️ Shop</h1>
+    <p style="opacity:.7;">Browse our products and add them to your cart.</p>
+    """,
+    unsafe_allow_html=True,
+)
+
+# Search
+search = st.text_input(
+    "🔎 Search products",
+    placeholder="Search Milk, Rice, groceries...",
+)
+
+# Categories
+categories = get_categories()
+
+category_options = ["All"]
+
+category_map = {}
+
+for category in categories:
+    category_id = category.get("id")
+    category_name = category.get("name", "Category")
+
+    category_options.append(category_name)
+
+    category_map[category_name] = category_id
+
+selected_category = st.selectbox(
+    "📂 Category",
+    category_options,
+)
+
+# Load products
+selected_category_id = None
+
+if selected_category != "All":
+    selected_category_id = category_map.get(selected_category)
+
+products = get_products(
+    category_id=selected_category_id,
+    search=search.strip() if search else None,
+)
+
+st.markdown("---")
+
+if not products:
+    st.info(
+        "No products found. Please check your Supabase product data."
+    )
 else:
-    cols = st.columns(4)
-    for i,p in enumerate(filtered):
-        with cols[i % 4]:
-            product_card(p)
-            if st.button("Add to cart", key=f"shop_add_{p.get('id', i)}", use_container_width=True):
-                add(p); st.toast(f"Added {p.get('name','product')} to cart")
+    st.markdown(
+        f"### 🛒 {len(products)} product(s)"
+    )
 
-st.markdown(f'<div class="cartbar">🛒 <b>{count()}</b> item(s) in cart · Open Cart when you are ready.</div>', unsafe_allow_html=True)
+    columns = st.columns(3)
+
+    for index, product in enumerate(products):
+        with columns[index % 3]:
+
+            name = product.get("name", "Product")
+            price = product.get("price", 0)
+            mrp = product.get("mrp", price)
+            image_url = product.get("image_url", "")
+            description = product.get("description", "")
+
+            if image_url:
+                st.image(
+                    image_url,
+                    use_container_width=True,
+                )
+
+            st.markdown(
+                f"""
+                <div class="neon-card">
+                    <h3>{name}</h3>
+                    <div style="font-size:24px;font-weight:800;">
+                        ₹{price}
+                    </div>
+                    <div style="opacity:.6;">
+                        MRP ₹{mrp}
+                    </div>
+                    <p style="opacity:.75;">
+                        {description}
+                    </p>
+                </div>
+                """,
+                unsafe_allow_html=True,
+            )
+
+            if st.button(
+                f"🛒 Add {name}",
+                key=f"add_product_{product.get('id', index)}",
+                use_container_width=True,
+            ):
+                add_to_cart(product)
+                st.success(f"{name} added to cart!")
+
+
 footer(settings)
