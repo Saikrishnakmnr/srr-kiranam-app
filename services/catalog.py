@@ -1,108 +1,201 @@
-from .supabase_client import get_supabase, table_columns
-
-CATEGORY_TABLE = "kiranam_categories"
-PRODUCT_TABLE = "kiranam_products"
+from services.supabase_client import get_supabase
 
 
-def _first_existing(d, *keys, default=None):
-    for key in keys:
-        if key in d and d.get(key) is not None:
-            return d.get(key)
+def _get_rows(table_name):
+    """Read all rows from a Supabase table."""
+    supabase = get_supabase()
+
+    if supabase is None:
+        return []
+
+    try:
+        response = supabase.table(table_name).select("*").execute()
+        return response.data or []
+    except Exception:
+        return []
+
+
+def _first_value(row, names, default=None):
+    """Return the first available value from a list of column names."""
+    for name in names:
+        if name in row and row[name] is not None:
+            return row[name]
     return default
 
 
-def get_categories(active_only=True):
-    sb = get_supabase()
-    if not sb:
-        return []
-    try:
-        q = sb.table(CATEGORY_TABLE).select("*")
-        cols = table_columns(CATEGORY_TABLE)
-        if active_only and "active" in cols:
-            q = q.eq("active", True)
-        if "sort_order" in cols:
-            q = q.order("sort_order")
-        else:
-            q = q.order("name")
-        return q.execute().data or []
-    except Exception:
-        return []
+def get_categories():
+    """Return all categories from the existing categories table."""
+    rows = _get_rows("kiranam_categories")
+
+    categories = []
+
+    for row in rows:
+        category_id = _first_value(
+            row,
+            ["id", "category_id"],
+        )
+
+        name = _first_value(
+            row,
+            ["name", "category_name", "title"],
+            "Category",
+        )
+
+        is_active = _first_value(
+            row,
+            ["is_active", "active"],
+            True,
+        )
+
+        if is_active is False:
+            continue
+
+        categories.append(
+            {
+                "id": category_id,
+                "name": str(name),
+            }
+        )
+
+    return categories
 
 
-def get_products(featured=False, active_only=True):
-    sb = get_supabase()
-    if not sb:
-        return []
-    try:
-        cols = table_columns(PRODUCT_TABLE)
-        q = sb.table(PRODUCT_TABLE).select("*")
-        if active_only and "active" in cols:
-            q = q.eq("active", True)
-        if featured and "featured" in cols:
-            q = q.eq("featured", True)
-        if "name" in cols:
-            q = q.order("name")
-        rows = q.execute().data or []
-        cats = {str(c.get("id")): c.get("name") for c in get_categories(False)}
-        for p in rows:
-            cat_id = _first_existing(p, "category_id", "category")
-            nested = p.get("categories") or {}
-            p["category_name"] = nested.get("name") if isinstance(nested, dict) else cats.get(str(cat_id), "")
-            p["selling_price"] = _first_existing(p, "selling_price", "sale_price", "price", default=0)
-            p["image_url"] = _first_existing(p, "image_url", "image", "photo_url", "thumbnail_url")
-        return rows
-    except Exception:
-        return []
+def get_products(category_id=None, search=None, featured_only=False):
+    """Return products from the existing products table."""
+    rows = _get_rows("kiranam_products")
 
+    products = []
 
-def get_product_count():
-    return len(get_products(featured=False, active_only=False))
+    for row in rows:
+        is_active = _first_value(
+            row,
+            ["is_active", "active"],
+            True,
+        )
 
+        if is_active is False:
+            continue
 
-def save_category(name, slug=None):
-    sb = get_supabase()
-    if not sb:
-        return False, "Supabase is not configured."
-    try:
-        cols = table_columns(CATEGORY_TABLE)
-        payload = {"name": name}
-        if "slug" in cols:
-            payload["slug"] = slug or name.strip().lower().replace(" ", "-")
-        if "active" in cols:
-            payload["active"] = True
-        if "sort_order" in cols:
-            payload["sort_order"] = 0
-        sb.table(CATEGORY_TABLE).insert(payload).execute()
-        return True, "Category added."
-    except Exception as exc:
-        return False, str(exc)
+        product_category_id = _first_value(
+            row,
+            ["category_id", "category", "cat_id"],
+        )
 
-
-def save_product(values):
-    sb = get_supabase()
-    if not sb:
-        return False, "Supabase is not configured."
-    try:
-        cols = table_columns(PRODUCT_TABLE)
-        payload = {}
-        aliases = {
-            "name": ["name"], "slug": ["slug"], "description": ["description"],
-            "price": ["price", "selling_price", "sale_price"], "mrp": ["mrp"],
-            "category_id": ["category_id"], "image_url": ["image_url", "image", "photo_url"],
-            "featured": ["featured"], "active": ["active"], "stock": ["stock", "stock_quantity"],
-            "unit": ["unit"],
-        }
-        for key, candidates in aliases.items():
-            if values.get(key) is None or values.get(key) == "":
+        if category_id is not None:
+            if str(product_category_id) != str(category_id):
                 continue
-            target = next((c for c in candidates if c in cols), None)
-            if target:
-                payload[target] = values[key]
-        if "slug" in cols and "slug" not in payload:
-            payload["slug"] = values["name"].strip().lower().replace(" ", "-")
-        if "active" in cols and "active" not in payload:
-            payload["active"] = True
-        sb.table(PRODUCT_TABLE).insert(payload).execute()
-        return True, "Product added successfully."
-    except Exception as exc:
-        return False, str(exc)
+
+        if featured_only:
+            featured = _first_value(
+                row,
+                ["is_featured", "featured"],
+                False,
+            )
+
+            if not featured:
+                continue
+
+        name = _first_value(
+            row,
+            ["name", "product_name", "title"],
+            "Product",
+        )
+
+        if search:
+            if search.lower() not in str(name).lower():
+                continue
+
+        price = _first_value(
+            row,
+            ["price", "selling_price", "sale_price"],
+            0,
+        )
+
+        mrp = _first_value(
+            row,
+            ["mrp", "original_price", "list_price"],
+            price,
+        )
+
+        image_url = _first_value(
+            row,
+            ["image_url", "image", "photo_url", "product_image"],
+            "",
+        )
+
+        products.append(
+            {
+                "id": _first_value(
+                    row,
+                    ["id", "product_id"],
+                ),
+                "name": str(name),
+                "price": price,
+                "selling_price": price,
+                "mrp": mrp,
+                "category_id": product_category_id,
+                "image_url": image_url,
+                "description": _first_value(
+                    row,
+                    ["description", "details"],
+                    "",
+                ),
+                "is_active": True,
+                "raw": row,
+            }
+        )
+
+    return products
+
+
+def get_all_products():
+    """Return all active products."""
+    return get_products()
+
+
+def get_featured_products():
+    """Return featured products."""
+    return get_products(featured_only=True)
+
+
+def get_product(product_id):
+    """Return one product by ID."""
+    products = get_products()
+
+    for product in products:
+        if str(product.get("id")) == str(product_id):
+            return product
+
+    return None
+
+
+def get_category_name(category_id):
+    """Find a category name from its ID."""
+    categories = get_categories()
+
+    for category in categories:
+        if str(category.get("id")) == str(category_id):
+            return category.get("name", "")
+
+    return ""
+
+
+def get_products_with_category():
+    """Return products with their category name attached."""
+    products = get_products()
+
+    category_map = {
+        str(category["id"]): category["name"]
+        for category in get_categories()
+        if category.get("id") is not None
+    }
+
+    for product in products:
+        category_id = product.get("category_id")
+
+        product["category_name"] = category_map.get(
+            str(category_id),
+            "",
+        )
+
+    return products
