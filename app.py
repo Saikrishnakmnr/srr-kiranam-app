@@ -16,37 +16,13 @@ init_cart()
 
 
 pages = [
-    st.Page(
-        "pages/home.py",
-        title="Home",
-        icon="🏠",
-        default=True,
-    ),
-    st.Page(
-        "pages/shop.py",
-        title="Shop",
-        icon="🛍️",
-    ),
-    st.Page(
-        "pages/cart.py",
-        title="Cart",
-        icon="🛒",
-    ),
-    st.Page(
-        "pages/checkout.py",
-        title="Checkout",
-        icon="💳",
-    ),
-    st.Page(
-        "pages/orders.py",
-        title="Orders",
-        icon="📦",
-    ),
-    st.Page(
-        "pages/admin.py",
-        title="Admin",
-        icon="⚙️",
-    ),
+    st.Page("pages/home.py", title="Home", icon="🏠", default=True),
+    st.Page("pages/shop.py", title="Shop", icon="🛍️"),
+    st.Page("pages/cart.py", title="Cart", icon="🛒"),
+    st.Page("pages/checkout.py", title="Checkout", icon="💳"),
+    st.Page("pages/orders.py", title="Orders", icon="📦"),
+    st.Page("pages/login.py", title="Sign In", icon="🔐"),
+    st.Page("pages/admin.py", title="Admin", icon="⚙️"),
 ]
 
 
