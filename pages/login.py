@@ -2,7 +2,6 @@ import streamlit as st
 
 from services.supabase_client import get_supabase
 from components.ui import inject_css, header, footer
-from services.settings import load_settings
 
 
 st.set_page_config(
@@ -12,9 +11,7 @@ st.set_page_config(
 )
 
 inject_css()
-
-settings = load_settings()
-header(settings)
+header()
 
 supabase = get_supabase()
 
@@ -31,6 +28,7 @@ st.markdown(
 )
 
 tab1, tab2 = st.tabs(["📧 Sign In", "🆕 Create Account"])
+
 
 with tab1:
     email = st.text_input(
@@ -53,8 +51,10 @@ with tab1:
     ):
         if not email or not password:
             st.warning("Please enter your email and password.")
+
         elif supabase is None:
             st.error("Supabase is not configured in Streamlit Secrets.")
+
         else:
             try:
                 result = supabase.auth.sign_in_with_password(
@@ -71,6 +71,7 @@ with tab1:
 
             except Exception as e:
                 st.error(f"Sign in failed: {e}")
+
 
 with tab2:
     name = st.text_input(
@@ -106,12 +107,16 @@ with tab2:
     ):
         if not name or not email2 or not password2:
             st.warning("Please fill in all required fields.")
+
         elif password2 != password3:
             st.error("Passwords do not match.")
+
         elif len(password2) < 6:
             st.error("Password must contain at least 6 characters.")
+
         elif supabase is None:
             st.error("Supabase is not configured in Streamlit Secrets.")
+
         else:
             try:
                 result = supabase.auth.sign_up(
@@ -128,7 +133,11 @@ with tab2:
 
                 if result.user:
                     st.success(
-                        "Account created! Check your email if email confirmation is enabled."
+                        "Account created successfully!"
+                    )
+                    st.info(
+                        "If email confirmation is enabled, "
+                        "please check your email before signing in."
                     )
 
             except Exception as e:
@@ -138,11 +147,11 @@ with tab2:
 st.markdown(
     """
     <div style="text-align:center;margin:25px 0;opacity:.7;">
-        Google sign-in will be connected after we configure
-        the Google OAuth settings.
+        Google sign-in will be added after email authentication
+        is working correctly.
     </div>
     """,
     unsafe_allow_html=True,
 )
 
-footer(settings)
+footer()
