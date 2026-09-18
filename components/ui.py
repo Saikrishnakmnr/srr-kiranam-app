@@ -172,14 +172,14 @@ def header(settings):
 
     cols = st.columns(6)
 
-    links = [
-        ("Home", "pages/home.py", "🏠"),
-        ("Shop", "pages/shop.py", "🛍️"),
-        ("Cart", "pages/cart.py", "🛒"),
-        ("Orders", "pages/orders.py", "📦"),
-        ("Admin", "pages/admin.py", "⚙️"),
-        ("Checkout", "pages/checkout.py", "💳"),
-    ]
+  links = [
+    ("Home", "pages/home.py", "🏠"),
+    ("Shop", "pages/shop.py", "🛍️"),
+    ("Cart", "pages/cart.py", "🛒"),
+    ("Orders", "pages/orders.py", "📦"),
+    ("Sign In", "pages/login.py", "🔐"),
+    ("Admin", "pages/admin.py", "⚙️"),
+]
 
     for col, (label, path, icon) in zip(cols, links):
         with col:
