@@ -6,142 +6,37 @@ def inject_css():
         """
         <style>
         .stApp {
-            background:
-                radial-gradient(
-                    circle at 10% 10%,
-                    rgba(0,255,220,.08),
-                    transparent 30%
-                ),
-                radial-gradient(
-                    circle at 90% 20%,
-                    rgba(140,0,255,.08),
-                    transparent 30%
-                ),
-                #070b14;
-            color: #f5f7ff;
+            background: #070711;
         }
 
         .block-container {
             max-width: 1200px;
             padding-top: 1rem;
-            padding-bottom: 4rem;
+            padding-bottom: 3rem;
         }
 
-        .store-header {
-            padding: 18px 20px;
-            border: 1px solid rgba(0,255,220,.25);
+        .neon-card {
+            background: rgba(20, 20, 35, 0.92);
+            border: 1px solid rgba(0, 255, 255, 0.25);
             border-radius: 18px;
-            background: rgba(12,18,32,.86);
-            box-shadow: 0 0 25px rgba(0,255,220,.08);
-            margin-bottom: 18px;
-        }
-
-        .store-title {
-            font-size: 28px;
-            font-weight: 800;
-            margin: 0;
-            background: linear-gradient(90deg,#00ffe0,#8b5cff);
-            -webkit-background-clip: text;
-            -webkit-text-fill-color: transparent;
-        }
-
-        .store-tagline {
-            color: #aeb8ca;
-            font-size: 14px;
-            margin-top: 3px;
+            padding: 20px;
+            box-shadow: 0 0 18px rgba(0, 255, 255, 0.08);
         }
 
         .product-card {
-            padding: 16px;
+            background: rgba(20, 20, 35, 0.95);
+            border: 1px solid rgba(0, 255, 255, 0.2);
             border-radius: 18px;
-            background: rgba(14,20,34,.92);
-            border: 1px solid rgba(255,255,255,.08);
-            margin-bottom: 16px;
-            min-height: 150px;
+            padding: 15px;
+            margin-bottom: 20px;
         }
 
-        .product-name {
-            font-size: 18px;
-            font-weight: 750;
-            margin-top: 8px;
+        h1, h2, h3 {
+            letter-spacing: 0.5px;
         }
 
-        .product-price {
-            font-size: 21px;
-            font-weight: 800;
-            color: #00ffe0;
-        }
-
-        .product-mrp {
-            color: #7f8ba0;
-            text-decoration: line-through;
-            margin-left: 7px;
-        }
-
-        .discount-badge {
-            display: inline-block;
-            margin-top: 5px;
-            padding: 3px 8px;
-            border-radius: 999px;
-            background: rgba(0,255,160,.10);
-            color: #00ffb0;
-            font-size: 12px;
-            font-weight: 700;
-        }
-
-        .hero {
-            padding: 34px 28px;
-            border-radius: 24px;
-            background:
-                linear-gradient(
-                    135deg,
-                    rgba(0,255,220,.13),
-                    rgba(139,92,255,.13)
-                ),
-                rgba(10,15,27,.92);
-            border: 1px solid rgba(0,255,220,.22);
-            box-shadow: 0 0 35px rgba(0,255,220,.07);
-            margin-bottom: 28px;
-        }
-
-        .hero h1 {
-            font-size: clamp(32px,5vw,58px);
-            line-height: 1.05;
-            margin-bottom: 10px;
-        }
-
-        .hero p {
-            color: #b9c2d3;
-            font-size: 17px;
-        }
-
-        .section-title {
-            font-size: 25px;
-            font-weight: 800;
-            margin: 25px 0 14px;
-        }
-
-        .footer {
-            margin-top: 50px;
-            padding: 25px 10px;
-            text-align: center;
-            color: #7f8ba0;
-            border-top: 1px solid rgba(255,255,255,.08);
-        }
-
-        @media (max-width: 700px) {
-            .block-container {
-                padding-left: .7rem;
-                padding-right: .7rem;
-            }
-
-            .store-title {
-                font-size: 23px;
-            }
-
-            .hero {
-                padding: 24px 18px;
-            }
+        button {
+            border-radius: 12px !important;
         }
         </style>
         """,
@@ -149,22 +44,31 @@ def inject_css():
     )
 
 
-def header(settings):
-    store_name = settings.get(
-        "store_name",
-        "SRR Kiranam"
-    )
+def header(settings=None):
+    store_name = "SRR Kiranam"
 
-    tagline = settings.get(
-        "store_tagline",
-        "Everyday essentials, delivered to your door."
-    )
+    if settings:
+        store_name = settings.get(
+            "store_name",
+            settings.get("name", store_name),
+        )
 
     st.markdown(
         f"""
-        <div class="store-header">
-            <div class="store-title">{store_name}</div>
-            <div class="store-tagline">{tagline}</div>
+        <div style="
+            padding:15px 5px 10px 5px;
+            text-align:center;
+        ">
+            <h1 style="
+                margin:0;
+                font-size:32px;
+                font-weight:800;
+            ">
+                ⚡ {store_name}
+            </h1>
+            <div style="opacity:.7;">
+                Fast local delivery
+            </div>
         </div>
         """,
         unsafe_allow_html=True,
@@ -172,20 +76,20 @@ def header(settings):
 
     cols = st.columns(6)
 
-  links = [
-    ("Home", "pages/home.py", "🏠"),
-    ("Shop", "pages/shop.py", "🛍️"),
-    ("Cart", "pages/cart.py", "🛒"),
-    ("Orders", "pages/orders.py", "📦"),
-    ("Sign In", "pages/login.py", "🔐"),
-    ("Admin", "pages/admin.py", "⚙️"),
-]
+    links = [
+        ("Home", "pages/home.py", "🏠"),
+        ("Shop", "pages/shop.py", "🛍️"),
+        ("Cart", "pages/cart.py", "🛒"),
+        ("Orders", "pages/orders.py", "📦"),
+        ("Sign In", "pages/login.py", "🔐"),
+        ("Admin", "pages/admin.py", "⚙️"),
+    ]
 
     for col, (label, path, icon) in zip(cols, links):
         with col:
             if st.button(
                 label,
-                key=f"nav_{label.lower()}",
+                key=f"nav_{label.lower().replace(' ', '_')}",
                 icon=icon,
                 use_container_width=True,
             ):
@@ -194,104 +98,35 @@ def header(settings):
 
 def product_card(product):
     name = product.get("name", "Product")
-
-    price = product.get(
-        "selling_price",
-        product.get("price", 0)
-    )
-
-    mrp = product.get("mrp")
-
-    image = product.get("image_url")
-
-    if not image:
-        image = product.get("image")
-
-    if image:
-        st.image(
-            image,
-            use_container_width=True
-        )
-
-    st.markdown(
-        '<div class="product-card">',
-        unsafe_allow_html=True,
-    )
-
-    st.markdown(
-        f'<div class="product-name">{name}</div>',
-        unsafe_allow_html=True,
-    )
-
-    try:
-        price_number = float(price)
-    except (TypeError, ValueError):
-        price_number = 0
-
-    mrp_html = ""
-
-    try:
-        if mrp is not None and float(mrp) > price_number:
-            mrp_html = (
-                f'<span class="product-mrp">'
-                f'₹{mrp}'
-                f'</span>'
-            )
-    except (TypeError, ValueError):
-        pass
+    price = product.get("price", product.get("selling_price", 0))
+    mrp = product.get("mrp", 0)
 
     st.markdown(
         f"""
-        <div>
-            <span class="product-price">
+        <div class="product-card">
+            <h3>{name}</h3>
+            <div style="font-size:22px;font-weight:700;">
                 ₹{price}
-            </span>
-            {mrp_html}
+            </div>
+            <div style="opacity:.6;">
+                MRP ₹{mrp}
+            </div>
         </div>
         """,
         unsafe_allow_html=True,
     )
 
-    if mrp is not None:
-        try:
-            mrp_number = float(mrp)
 
-            if mrp_number > price_number:
-                discount = round(
-                    ((mrp_number - price_number) / mrp_number)
-                    * 100
-                )
-
-                st.markdown(
-                    f"""
-                    <span class="discount-badge">
-                        {discount}% OFF
-                    </span>
-                    """,
-                    unsafe_allow_html=True,
-                )
-        except (TypeError, ValueError):
-            pass
-
-    st.markdown("</div>", unsafe_allow_html=True)
-
-    return st.button(
-        "🛒 Add to Cart",
-        key=f"add_{product.get('id', name)}",
-        use_container_width=True,
-    )
-
-
-def footer(settings):
-    store_name = settings.get(
-        "store_name",
-        "SRR Kiranam"
-    )
-
+def footer(settings=None):
     st.markdown(
-        f"""
-        <div class="footer">
-            © 2026 {store_name} · All rights reserved.
+        """
+        <hr>
+        <div style="
+            text-align:center;
+            opacity:.6;
+            padding:20px 0;
+        ">
+            © SRR Kiranam · Local Delivery
         </div>
         """,
         unsafe_allow_html=True,
