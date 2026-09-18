@@ -1,14 +1,22 @@
 import streamlit as st
 
 
-def inject_neon_css():
+def inject_css():
     st.markdown(
         """
         <style>
         .stApp {
             background:
-                radial-gradient(circle at 10% 10%, rgba(0,255,220,.08), transparent 30%),
-                radial-gradient(circle at 90% 20%, rgba(140,0,255,.08), transparent 30%),
+                radial-gradient(
+                    circle at 10% 10%,
+                    rgba(0,255,220,.08),
+                    transparent 30%
+                ),
+                radial-gradient(
+                    circle at 90% 20%,
+                    rgba(140,0,255,.08),
+                    transparent 30%
+                ),
                 #070b14;
             color: #f5f7ff;
         }
@@ -43,53 +51,13 @@ def inject_neon_css():
             margin-top: 3px;
         }
 
-        .nav-button button {
-            border-radius: 12px !important;
-            border: 1px solid rgba(0,255,220,.20) !important;
-            background: rgba(15,23,40,.85) !important;
-        }
-
-        .nav-button button:hover {
-            border-color: #00ffe0 !important;
-            box-shadow: 0 0 14px rgba(0,255,220,.20) !important;
-        }
-
-        .hero {
-            padding: 34px 28px;
-            border-radius: 24px;
-            background:
-                linear-gradient(135deg,
-                    rgba(0,255,220,.13),
-                    rgba(139,92,255,.13)),
-                rgba(10,15,27,.92);
-            border: 1px solid rgba(0,255,220,.22);
-            box-shadow: 0 0 35px rgba(0,255,220,.07);
-            margin-bottom: 28px;
-        }
-
-        .hero h1 {
-            font-size: clamp(32px,5vw,58px);
-            line-height: 1.05;
-            margin-bottom: 10px;
-        }
-
-        .hero p {
-            color: #b9c2d3;
-            font-size: 17px;
-        }
-
         .product-card {
             padding: 16px;
             border-radius: 18px;
             background: rgba(14,20,34,.92);
             border: 1px solid rgba(255,255,255,.08);
             margin-bottom: 16px;
-            min-height: 190px;
-        }
-
-        .product-card:hover {
-            border-color: rgba(0,255,220,.35);
-            box-shadow: 0 0 22px rgba(0,255,220,.08);
+            min-height: 150px;
         }
 
         .product-name {
@@ -119,6 +87,32 @@ def inject_neon_css():
             color: #00ffb0;
             font-size: 12px;
             font-weight: 700;
+        }
+
+        .hero {
+            padding: 34px 28px;
+            border-radius: 24px;
+            background:
+                linear-gradient(
+                    135deg,
+                    rgba(0,255,220,.13),
+                    rgba(139,92,255,.13)
+                ),
+                rgba(10,15,27,.92);
+            border: 1px solid rgba(0,255,220,.22);
+            box-shadow: 0 0 35px rgba(0,255,220,.07);
+            margin-bottom: 28px;
+        }
+
+        .hero h1 {
+            font-size: clamp(32px,5vw,58px);
+            line-height: 1.05;
+            margin-bottom: 10px;
+        }
+
+        .hero p {
+            color: #b9c2d3;
+            font-size: 17px;
         }
 
         .section-title {
@@ -156,7 +150,11 @@ def inject_neon_css():
 
 
 def header(settings):
-    store_name = settings.get("store_name", "SRR Kiranam")
+    store_name = settings.get(
+        "store_name",
+        "SRR Kiranam"
+    )
+
     tagline = settings.get(
         "store_tagline",
         "Everyday essentials, delivered to your door."
@@ -194,8 +192,101 @@ def header(settings):
                 st.switch_page(path)
 
 
+def product_card(product):
+    name = product.get("name", "Product")
+
+    price = product.get(
+        "selling_price",
+        product.get("price", 0)
+    )
+
+    mrp = product.get("mrp")
+
+    image = product.get("image_url")
+
+    if not image:
+        image = product.get("image")
+
+    if image:
+        st.image(
+            image,
+            use_container_width=True
+        )
+
+    st.markdown(
+        '<div class="product-card">',
+        unsafe_allow_html=True,
+    )
+
+    st.markdown(
+        f'<div class="product-name">{name}</div>',
+        unsafe_allow_html=True,
+    )
+
+    try:
+        price_number = float(price)
+    except (TypeError, ValueError):
+        price_number = 0
+
+    mrp_html = ""
+
+    try:
+        if mrp is not None and float(mrp) > price_number:
+            mrp_html = (
+                f'<span class="product-mrp">'
+                f'₹{mrp}'
+                f'</span>'
+            )
+    except (TypeError, ValueError):
+        pass
+
+    st.markdown(
+        f"""
+        <div>
+            <span class="product-price">
+                ₹{price}
+            </span>
+            {mrp_html}
+        </div>
+        """,
+        unsafe_allow_html=True,
+    )
+
+    if mrp is not None:
+        try:
+            mrp_number = float(mrp)
+
+            if mrp_number > price_number:
+                discount = round(
+                    ((mrp_number - price_number) / mrp_number)
+                    * 100
+                )
+
+                st.markdown(
+                    f"""
+                    <span class="discount-badge">
+                        {discount}% OFF
+                    </span>
+                    """,
+                    unsafe_allow_html=True,
+                )
+        except (TypeError, ValueError):
+            pass
+
+    st.markdown("</div>", unsafe_allow_html=True)
+
+    return st.button(
+        "🛒 Add to Cart",
+        key=f"add_{product.get('id', name)}",
+        use_container_width=True,
+    )
+
+
 def footer(settings):
-    store_name = settings.get("store_name", "SRR Kiranam")
+    store_name = settings.get(
+        "store_name",
+        "SRR Kiranam"
+    )
 
     st.markdown(
         f"""
@@ -205,34 +296,3 @@ def footer(settings):
         """,
         unsafe_allow_html=True,
     )
- def product_card(product):
-    name = product.get("name", "Product")
-    price = product.get("selling_price", product.get("price", 0))
-    mrp = product.get("mrp")
-    image = product.get("image_url") or product.get("image")
-
-    if image:
-        st.image(image, use_container_width=True)
-
-    st.markdown(
-        f"""
-        <div class="product-card">
-            <div class="product-name">{name}</div>
-            <div>
-                <span class="product-price">₹{price}</span>
-                {"<span class='product-mrp'>₹" + str(mrp) + "</span>" if mrp and float(mrp) > float(price) else ""}
-            </div>
-        </div>
-        """,
-        unsafe_allow_html=True,
-    )
-
-    return st.button(
-        "🛒 Add to Cart",
-        key=f"add_{product.get('id', name)}",
-        use_container_width=True,
-    )
-
-
-def inject_css():
-    inject_neon_css()    
