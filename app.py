@@ -22,7 +22,9 @@ pages = [
     st.Page("pages/checkout.py", title="Checkout", icon="💳"),
     st.Page("pages/orders.py", title="Orders", icon="📦"),
     st.Page("pages/login.py", title="Sign In", icon="🔐"),
+    st.Page("pages/debug.py", title="Database Check", icon="🔎"),
     st.Page("pages/admin.py", title="Admin", icon="⚙️"),
+    
 ]
 
 
